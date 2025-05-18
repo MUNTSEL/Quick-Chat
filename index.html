@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inloggen</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #121212;
+      color: #eee;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px;
+    }
+    input, button {
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 5px;
+      border: none;
+      font-size: 16px;
+    }
+    input {
+      width: 260px;
+    }
+    button {
+      cursor: pointer;
+      background: #2196f3;
+      color: white;
+    }
+    button:hover {
+      background: #1976d2;
+    }
+    #errorMsg {
+      color: #ff4444;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+  </style>
+
+  <!-- Firebase scripts -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+</head>
+<body>
+
+  <h1>Login</h1>
+  <input type="text" id="username" placeholder="Gebruikersnaam" />
+  <input type="password" id="password" placeholder="Wachtwoord" />
+  <button id="loginBtn">Inloggen</button>
+  <div id="errorMsg"></div>
+
+  <script>
+    // Firebase config 🔥
+    const firebaseConfig = {
+      apiKey: "AIzaSyB6rYiVZo2R4oY0VE9cDDKRNLkm_qLGAHw",
+      authDomain: "secret-chat-7fec5.firebaseapp.com",
+      databaseURL: "https://secret-chat-7fec5-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "secret-chat-7fec5",
+      storageBucket: "secret-chat-7fec5.appspot.com",
+      messagingSenderId: "822761810797",
+      appId: "1:822761810797:web:92415aadd51d141ee04864"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const loginBtn = document.getElementById('loginBtn');
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+    const errorMsg = document.getElementById('errorMsg');
+
+    loginBtn.addEventListener('click', () => {
+      errorMsg.textContent = "";
+
+      const username = usernameInput.value.trim();
+      const password = passwordInput.value;
+
+      if (!username || !password) {
+        errorMsg.textContent = "Vul alles in, bro!";
+        return;
+      }
+
+      db.ref('users/' + username).once('value')
+        .then(snapshot => {
+          if (!snapshot.exists()) {
+            errorMsg.textContent = "Gebruiker bestaat niet 😬";
+            return;
+          }
+
+          const userData = snapshot.val();
+          if (userData.password !== password) {
+            errorMsg.textContent = "Wachtwoord fout, check dat ff 🔐";
+            return;
+          }
+
+          // Rol ophalen
+          db.ref('usersRoles/' + username + '/role').once('value')
+            .then(roleSnap => {
+              const role = roleSnap.exists() ? roleSnap.val() : "user";
+              // Doorsturen naar chatpagina
+              window.location.href = `chat.html?username=${username}&role=${role}`;
+            });
+        })
+        .catch(err => {
+          errorMsg.textContent = "Er ging iets mis bij het inloggen 😵";
+          console.error(err);
+        });
+    });
+  </script>
+</body>
+</html>
