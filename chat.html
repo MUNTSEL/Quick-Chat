@@ -313,8 +313,18 @@ function renderMessage(msgId, msgData) {
   div.appendChild(authorEl);
 
   const textEl = document.createElement('div');
-  textEl.textContent = msgData.text;
-  div.appendChild(textEl);
+textEl.textContent = msgData.text;
+div.appendChild(textEl);
+
+// Timestamp toevoegen
+const timeEl = document.createElement('div');
+const date = new Date(msgData.timestamp);
+timeEl.textContent = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+timeEl.style.fontSize = '12px';
+timeEl.style.color = '#999';
+timeEl.style.marginTop = '5px';
+div.appendChild(timeEl);
+
 
   if (role === 'admin') {
     const delBtn = document.createElement('button');
