@@ -3,420 +3,172 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Secret Chat - Live Chat</title>
-
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #121212;
-      color: #eee;
-      margin: 0; padding: 0;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-    }
-    header {
-      background: #3682f5;
-      padding: 15px;
-      font-size: 24px;
-      font-weight: bold;
-      text-align: center;
-      color: white;
-      position: relative;
-    }
-    #loggedInUser {
-      position: absolute;
-      left: 15px;
-      top: 15px;
-      font-size: 20px;
-      font-weight: 900;
-      color: #fff;
-      user-select: none;
-    }
-    #logoutBtn, #changePassBtn {
-      position: absolute;
-      top: 15px;
-      background: #444;
-      border: none;
-      padding: 8px 12px;
-      border-radius: 5px;
-      color: white;
-      cursor: pointer;
-      font-weight: bold;
-      user-select: none;
-    }
-    #logoutBtn { right: 15px; }
-    #changePassBtn { right: 120px; }
-    #logoutBtn:hover { background: #ff4444; }
-    #changePassBtn:hover { background: #666; }
-
-    #chatMessages {
-      flex-grow: 1;
-      overflow-y: auto;
-      padding: 15px;
-      background: #222;
-    }
-    .msg {
-      padding: 8px 12px;
-      margin-bottom: 10px;
-      border-radius: 10px;
-      background: #fff;
-      color: #000;
-      position: relative;
-      max-width: 70%;
-      word-wrap: break-word;
-    }
-    .msg .author {
-      font-weight: bold;
-      margin-bottom: 5px;
-    }
-    .msg .deleteBtn {
-      position: absolute;
-      top: 5px;
-      right: 8px;
-      background: transparent;
-      border: none;
-      color: #ff4444;
-      font-weight: bold;
-      cursor: pointer;
-      font-size: 16px;
-    }
-
-    footer {
-      display: flex;
-      padding: 10px;
-      background: #181818;
-    }
-    #messageInput {
-      flex-grow: 1;
-      padding: 10px;
-      font-size: 16px;
-      border-radius: 5px;
-      border: none;
-      margin-right: 8px;
-      background: #333;
-      color: #eee;
-    }
-    #sendBtn {
-      background: #ff5722;
-      border: none;
-      color: white;
-      padding: 10px 20px;
-      font-weight: bold;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    #sendBtn:hover { background: #e64a19; }
-
-    #toggleAdminPanelBtn {
-      display: none;
-      background: #ff5722;
-      color: white;
-      border: none;
-      padding: 8px 15px;
-      font-weight: bold;
-      cursor: pointer;
-      border-radius: 5px;
-      margin: 10px 15px;
-    }
-
-    #adminPanel {
-      display: none;
-      flex-direction: column;
-      gap: 10px;
-      background: #333;
-      padding: 15px;
-      border-bottom: 3px solid #ff5722;
-      color: white;
-    }
-    #adminPanel input, #adminPanel button {
-      padding: 8px;
-      font-size: 16px;
-      border-radius: 5px;
-      border: none;
-    }
-    #adminPanel input { background: #222; color: white; }
-    #adminPanel button {
-      background: #ff5722;
-      color: white;
-      cursor: pointer;
-      font-weight: bold;
-    }
-    #adminPanel button:hover { background: #e64a19; }
-
-    .modal {
-      display: none;
-      position: fixed;
-      z-index: 1000;
-      left: 0; top: 0;
-      width: 100%; height: 100%;
-      background-color: rgba(0, 0, 0, 0.7);
-      justify-content: center;
-      align-items: center;
-    }
-    .modal-content {
-      background-color: #222;
-      color: white;
-      padding: 20px 30px;
-      border-radius: 10px;
-      box-shadow: 0 0 15px #000;
-      width: 90%;
-      max-width: 400px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .modal-content input {
-      padding: 10px;
-      font-size: 16px;
-      border-radius: 5px;
-      border: none;
-      background: #333;
-      color: white;
-    }
-    .modal-buttons {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 10px;
-    }
-    .modal-buttons button {
-      padding: 10px 20px;
-      border: none;
-      border-radius: 5px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    #cancelPassChange { background: #666; color: white; }
-    #cancelPassChange:hover { background: #888; }
-    #confirmPassChange { background: #ff5722; color: white; }
-    #confirmPassChange:hover { background: #e64a19; }
-  </style>
-
+  <title>🔥 Firebase Auth + RTDB Example</title>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 400px; margin: auto; padding: 20px; }
+    #user-data { margin-top: 20px; }
+    input, button { width: 100%; padding: 10px; margin: 6px 0; }
+    button { cursor: pointer; }
+    .hidden { display: none; }
+  </style>
 </head>
 <body>
 
-  <header>
-    <div id="loggedInUser"></div>
-    Secret Chat 🚀
-    <button id="logoutBtn">Uitloggen</button>
-    <button id="changePassBtn">Wachtwoord wijzigen</button>
-  </header>
+  <h2>🔥 Login / Register Firebase Auth</h2>
 
-  <button id="toggleAdminPanelBtn">Admin Panel openen</button>
-
-  <div id="adminPanel">
-    <h3>Nieuwe account aanmaken</h3>
-    <input type="text" id="newUser" placeholder="Nieuwe gebruikersnaam" />
-    <input type="password" id="newPass" placeholder="Wachtwoord" />
-    <input type="password" id="newPassConfirm" placeholder="Herhaal wachtwoord" />
-    <button id="createUserBtn">Account aanmaken</button>
-    <div id="adminMsg"></div>
+  <!-- Login form -->
+  <div id="login-form">
+    <input type="email" id="login-email" placeholder="Email" />
+    <input type="password" id="login-pass" placeholder="Wachtwoord" />
+    <button id="login-btn">Login</button>
+    <p>Of <a href="#" id="show-register">Registreer hier</a></p>
   </div>
 
-  <div id="chatMessages"></div>
+  <!-- Register form -->
+  <div id="register-form" class="hidden">
+    <input type="email" id="register-email" placeholder="Email" />
+    <input type="password" id="register-pass" placeholder="Wachtwoord" />
+    <button id="register-btn">Register</button>
+    <p>Al een account? <a href="#" id="show-login">Login hier</a></p>
+  </div>
 
-  <footer>
-    <input type="text" id="messageInput" placeholder="Typ hier je bericht..." />
-    <button id="sendBtn">Send</button>
-  </footer>
+  <!-- User info + logout -->
+  <div id="user-info" class="hidden">
+    <h3>Welkom, <span id="user-email"></span>! ✌️</h3>
+    <button id="logout-btn">Logout</button>
 
-  <div id="passwordModal" class="modal">
-    <div class="modal-content">
-      <h2>🔐 Wachtwoord wijzigen</h2>
-      <input type="password" id="currentPass" placeholder="Huidig wachtwoord">
-      <input type="password" id="newPassInput" placeholder="Nieuw wachtwoord">
-      <input type="password" id="confirmNewPass" placeholder="Bevestig nieuw wachtwoord">
-      <div class="modal-buttons">
-        <button id="cancelPassChange">Annuleren</button>
-        <button id="confirmPassChange">Bevestigen</button>
-      </div>
-      <div id="passChangeMsg"></div>
+    <div id="user-data">
+      <h4>Jouw Data in RTDB:</h4>
+      <textarea id="data-input" rows="5" placeholder="Schrijf hier wat data..."></textarea>
+      <button id="save-data-btn">Opslaan</button>
+      <pre id="saved-data"></pre>
     </div>
   </div>
 
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyB6rYiVZo2R4oY0VE9cDDKRNLkm_qLGAHw",
-      authDomain: "secret-chat-7fec5.firebaseapp.com",
-      databaseURL: "https://secret-chat-7fec5-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId: "secret-chat-7fec5",
-      storageBucket: "secret-chat-7fec5.appspot.com",
-      messagingSenderId: "822761810797",
-      appId: "1:822761810797:web:92415aadd51d141ee04864",
-    };
+<script>
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyB6rYiVZo2R4oY0VE9cDDKRNLkm_qLGAHw",
+  authDomain: "secret-chat-7fec5.firebaseapp.com",
+  projectId: "secret-chat-7fec5",
+  storageBucket: "secret-chat-7fec5.firebasestorage.app",
+  messagingSenderId: "822761810797",
+  appId: "1:822761810797:web:92415aadd51d141ee04864",
+  measurementId: "G-Q1ZWRXDHQ3"
+};
 
-    const getUrlParam = param => new URLSearchParams(location.search).get(param);
-    const username = getUrlParam('username');
-    const role = getUrlParam('role');
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
 
-    if (!username || !role) location.href = 'index.html';
+  // UI Elements
+  const loginForm = document.getElementById('login-form');
+  const registerForm = document.getElementById('register-form');
+  const userInfo = document.getElementById('user-info');
+  const userEmailSpan = document.getElementById('user-email');
+  const savedDataPre = document.getElementById('saved-data');
+  const dataInput = document.getElementById('data-input');
 
-    const chatMessagesEl = document.getElementById('chatMessages');
-    const messageInput = document.getElementById('messageInput');
-    const sendBtn = document.getElementById('sendBtn');
-    const logoutBtn = document.getElementById('logoutBtn');
-    const loggedInUserEl = document.getElementById('loggedInUser');
-    const adminPanel = document.getElementById('adminPanel');
-    const toggleAdminPanelBtn = document.getElementById('toggleAdminPanelBtn');
-    const createUserBtn = document.getElementById('createUserBtn');
-    const newUserInput = document.getElementById('newUser');
-    const newPassInput = document.getElementById('newPass');
-    const newPassConfirmInput = document.getElementById('newPassConfirm');
-    const adminMsg = document.getElementById('adminMsg');
+  // Show/hide register/login
+  document.getElementById('show-register').addEventListener('click', e => {
+    e.preventDefault();
+    loginForm.classList.add('hidden');
+    registerForm.classList.remove('hidden');
+  });
 
-    const passwordModal = document.getElementById('passwordModal');
-    const currentPass = document.getElementById('currentPass');
-    const newPass = document.getElementById('newPassInput');
-    const confirmNewPass = document.getElementById('confirmNewPass');
-    const confirmPassChange = document.getElementById('confirmPassChange');
-    const cancelPassChange = document.getElementById('cancelPassChange');
-    const passChangeMsg = document.getElementById('passChangeMsg');
-    const changePassBtn = document.getElementById('changePassBtn');
+  document.getElementById('show-login').addEventListener('click', e => {
+    e.preventDefault();
+    registerForm.classList.add('hidden');
+    loginForm.classList.remove('hidden');
+  });
 
-    loggedInUserEl.textContent = username.toUpperCase();
+  // Register
+  document.getElementById('register-btn').addEventListener('click', () => {
+    const email = document.getElementById('register-email').value;
+    const pass = document.getElementById('register-pass').value;
+    if (!email || !pass) return alert('Vul email en wachtwoord in!');
+    auth.createUserWithEmailAndPassword(email, pass)
+      .then(userCred => {
+        alert('Account aangemaakt! Je bent nu ingelogd.');
+        registerForm.classList.add('hidden');
+        userInfo.classList.remove('hidden');
+        userEmailSpan.textContent = userCred.user.email;
+        loadUserData(userCred.user.uid);
+      })
+      .catch(e => alert('Fout bij registreren: ' + e.message));
+  });
 
-    if (role === 'admin') {
-      toggleAdminPanelBtn.style.display = 'inline-block';
+  // Login
+  document.getElementById('login-btn').addEventListener('click', () => {
+    const email = document.getElementById('login-email').value;
+    const pass = document.getElementById('login-pass').value;
+    if (!email || !pass) return alert('Vul email en wachtwoord in!');
+    auth.signInWithEmailAndPassword(email, pass)
+      .then(userCred => {
+        loginForm.classList.add('hidden');
+        userInfo.classList.remove('hidden');
+        userEmailSpan.textContent = userCred.user.email;
+        loadUserData(userCred.user.uid);
+      })
+      .catch(e => alert('Fout bij inloggen: ' + e.message));
+  });
 
-      toggleAdminPanelBtn.onclick = () => {
-        const open = adminPanel.style.display === 'flex';
-        adminPanel.style.display = open ? 'none' : 'flex';
-        toggleAdminPanelBtn.textContent = open ? 'Admin Panel openen' : 'Admin Panel sluiten';
-      };
+  // Logout
+  document.getElementById('logout-btn').addEventListener('click', () => {
+    auth.signOut().then(() => {
+      userInfo.classList.add('hidden');
+      loginForm.classList.remove('hidden');
+      dataInput.value = '';
+      savedDataPre.textContent = '';
+    });
+  });
 
-      createUserBtn.onclick = () => {
-        const newUser = newUserInput.value.trim();
-        const pass = newPassInput.value.trim();
-        const confirm = newPassConfirmInput.value.trim();
-
-        if (!newUser || !pass || !confirm) {
-          adminMsg.textContent = 'Vul alles in!';
-          adminMsg.style.color = 'red';
-          return;
-        }
-        if (pass !== confirm) {
-          adminMsg.textContent = 'Wachtwoorden komen niet overeen!';
-          adminMsg.style.color = 'red';
-          return;
-        }
-
-        db.ref('users/' + newUser).once('value').then(snap => {
-          if (snap.exists()) {
-            adminMsg.textContent = 'Gebruiker bestaat al!';
-            adminMsg.style.color = 'red';
-          } else {
-            db.ref('users/' + newUser).set({ password: pass }).then(() => {
-              db.ref('usersRoles/' + newUser).set({ role: 'user' });
-              adminMsg.textContent = '✅ Account aangemaakt!';
-              adminMsg.style.color = 'lightgreen';
-              newUserInput.value = newPassInput.value = newPassConfirmInput.value = '';
-            });
-          }
-        });
-      };
+  // Check login status realtime
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      loginForm.classList.add('hidden');
+      registerForm.classList.add('hidden');
+      userInfo.classList.remove('hidden');
+      userEmailSpan.textContent = user.email;
+      loadUserData(user.uid);
+    } else {
+      userInfo.classList.add('hidden');
+      loginForm.classList.remove('hidden');
+      registerForm.classList.add('hidden');
+      dataInput.value = '';
+      savedDataPre.textContent = '';
     }
+  });
 
-    logoutBtn.onclick = () => location.href = 'index.html';
+  // Save data to RTDB onder /users/{uid}/data
+  document.getElementById('save-data-btn').addEventListener('click', () => {
+    const user = auth.currentUser;
+    if (!user) return alert('Je moet ingelogd zijn!');
+    const text = dataInput.value;
+    db.ref('users/' + user.uid + '/data').set(text)
+      .then(() => alert('Data opgeslagen!'))
+      .catch(e => alert('Fout bij opslaan: ' + e.message));
+  });
 
-    sendBtn.onclick = () => {
-      const text = messageInput.value.trim();
-      if (!text) return;
-      const msg = {
-        author: username,
-        authorRole: role,
-        text,
-        timestamp: Date.now()
-      };
-      db.ref('chatMessages').push(msg);
-      messageInput.value = '';
-    };
-
-    db.ref('chatMessages').on('child_added', snap => {
-      const { author, authorRole, text, timestamp } = snap.val();
-      const div = document.createElement('div');
-      div.classList.add('msg');
-      div.id = `msg-${snap.key}`;
-
-      const authorEl = document.createElement('div');
-      authorEl.classList.add('author');
-      authorEl.textContent = `${author} (${authorRole})`;
-      div.appendChild(authorEl);
-
-      const msgText = document.createElement('div');
-      msgText.innerHTML = text.replace(/@(\w+)/g, '<span style="color:#ffcc00;">@$1</span>');
-      div.appendChild(msgText);
-
-      const time = document.createElement('div');
-      time.textContent = new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      time.style.fontSize = '12px';
-      time.style.color = '#999';
-      time.style.marginTop = '5px';
-      div.appendChild(time);
-
-      if (role === 'admin') {
-        const del = document.createElement('button');
-        del.classList.add('deleteBtn');
-        del.textContent = '×';
-        del.onclick = () => {
-          if (confirm('Verwijderen?')) db.ref('chatMessages/' + snap.key).remove();
-        };
-        div.appendChild(del);
-      }
-
-      chatMessagesEl.appendChild(div);
-      chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
+  // Load user data realtime
+  function loadUserData(uid) {
+    const userDataRef = db.ref('users/' + uid + '/data');
+    userDataRef.on('value', snapshot => {
+      const val = snapshot.val();
+      savedDataPre.textContent = val || 'Geen data gevonden';
+      if (val !== null) dataInput.value = val;
     });
-
- const form = document.getElementById('changePasswordForm');
-    const currentPassInput = document.getElementById('currentPass');
-    const newPassInput = document.getElementById('newPassChange');
-    const confirmNewPassInput = document.getElementById('confirmNewPass');
-    const messageDiv = document.getElementById('message');
-
-    form.addEventListener('submit', e => {
-      e.preventDefault();
-
-      const currentPass = currentPassInput.value.trim();
-      const newPass = newPassInput.value.trim();
-      const confirmNewPass = confirmNewPassInput.value.trim();
-
-      messageDiv.textContent = '';
-      messageDiv.className = '';
-
-      // Simpele check: huidige wachtwoord is 'admin123' (dummy)
-      const correctCurrentPass = 'admin123';
-
-      if(currentPass !== correctCurrentPass) {
-        messageDiv.textContent = '😵 Huidig wachtwoord is incorrect!';
-        messageDiv.className = 'error';
-        return;
-      }
-
-      if(newPass.length < 6) {
-        messageDiv.textContent = '⚠️ Nieuw wachtwoord moet minstens 6 tekens zijn.';
-        messageDiv.className = 'error';
-        return;
-      }
-
-      if(newPass !== confirmNewPass) {
-        messageDiv.textContent = '🤔 Nieuw wachtwoord en bevestiging komen niet overeen.';
-        messageDiv.className = 'error';
-        return;
-      }
-
-      // Hier zou je normaal je wachtwoord update logica doen (bv. API call)
-      // For now, gewoon succes melden:
-      messageDiv.textContent = '✅ Wachtwoord succesvol veranderd!';
-      messageDiv.className = 'success';
-
-      // Clear inputs
-      form.reset();
-    });
-  </script>
+  }
+</script>
 </body>
 </html>
