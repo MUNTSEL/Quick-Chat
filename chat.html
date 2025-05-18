@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Secret Chat - Live Chat</title>
+
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -16,7 +17,7 @@
     }
     header {
       background: #3682f5;
-      padding: 15px 15px 15px 150px;
+      padding: 15px;
       font-size: 24px;
       font-weight: bold;
       text-align: center;
@@ -32,38 +33,23 @@
       color: #fff;
       user-select: none;
     }
-    #adminPanel {
-      background: #333;
-      padding: 10px 15px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      border-bottom: 3px solid #ff5722;
-      color: white;
-    }
-    #adminPanel h3 {
-      margin: 0 0 5px 0;
-      font-weight: bold;
-    }
-    #adminPanel input, #adminPanel button {
-      padding: 8px;
-      font-size: 16px;
-      border-radius: 5px;
+    #logoutBtn, #changePassBtn {
+      position: absolute;
+      top: 15px;
+      background: #444;
       border: none;
-    }
-    #adminPanel input {
-      background: #222;
-      color: white;
-    }
-    #adminPanel button {
-      background: #ff5722;
+      padding: 8px 12px;
+      border-radius: 5px;
       color: white;
       cursor: pointer;
       font-weight: bold;
+      user-select: none;
     }
-    #adminPanel button:hover {
-      background: #e64a19;
-    }
+    #logoutBtn { right: 15px; }
+    #changePassBtn { right: 120px; }
+    #logoutBtn:hover { background: #ff4444; }
+    #changePassBtn:hover { background: #666; }
+
     #chatMessages {
       flex-grow: 1;
       overflow-y: auto;
@@ -74,13 +60,11 @@
       padding: 8px 12px;
       margin-bottom: 10px;
       border-radius: 10px;
-      background: #ffffff;
+      background: #fff;
+      color: #000;
       position: relative;
       max-width: 70%;
       word-wrap: break-word;
-    }
-    .msg.admin {
-      background: #ffffff;
     }
     .msg .author {
       font-weight: bold;
@@ -97,6 +81,7 @@
       cursor: pointer;
       font-size: 16px;
     }
+
     footer {
       display: flex;
       padding: 10px;
@@ -121,92 +106,92 @@
       border-radius: 5px;
       cursor: pointer;
     }
-    #sendBtn:hover {
-      background: #e64a19;
-    }
-    #logoutBtn {
-      position: absolute;
-      top: 15px;
-      right: 15px;
-      background: #444;
+    #sendBtn:hover { background: #e64a19; }
+
+    #toggleAdminPanelBtn {
+      display: none;
+      background: #ff5722;
+      color: white;
       border: none;
-      padding: 8px 12px;
+      padding: 8px 15px;
+      font-weight: bold;
+      cursor: pointer;
       border-radius: 5px;
+      margin: 10px 15px;
+    }
+
+    #adminPanel {
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+      background: #333;
+      padding: 15px;
+      border-bottom: 3px solid #ff5722;
+      color: white;
+    }
+    #adminPanel input, #adminPanel button {
+      padding: 8px;
+      font-size: 16px;
+      border-radius: 5px;
+      border: none;
+    }
+    #adminPanel input { background: #222; color: white; }
+    #adminPanel button {
+      background: #ff5722;
       color: white;
       cursor: pointer;
       font-weight: bold;
-      user-select: none;
     }
-    #logoutBtn:hover {
-      background: #ff4444;
+    #adminPanel button:hover { background: #e64a19; }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0; top: 0;
+      width: 100%; height: 100%;
+      background-color: rgba(0, 0, 0, 0.7);
+      justify-content: center;
+      align-items: center;
     }
-    /* Modal style */
-.modal {
-  display: none;
-  position: fixed;
-  z-index: 1000;
-  left: 0; top: 0;
-  width: 100%; height: 100%;
-  background-color: rgba(0, 0, 0, 0.7);
-  justify-content: center;
-  align-items: center;
-}
-
-.modal-content {
-  background-color: #222;
-  color: white;
-  padding: 20px 30px;
-  border-radius: 10px;
-  box-shadow: 0 0 15px #000;
-  width: 90%;
-  max-width: 400px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.modal-content input {
-  padding: 10px;
-  font-size: 16px;
-  border-radius: 5px;
-  border: none;
-  background: #333;
-  color: white;
-}
-
-.modal-buttons {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 10px;
-}
-
-.modal-buttons button {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-#cancelPassChange {
-  background: #666;
-  color: white;
-}
-#cancelPassChange:hover {
-  background: #888;
-}
-
-#confirmPassChange {
-  background: #ff5722;
-  color: white;
-}
-#confirmPassChange:hover {
-  background: #e64a19;
-}
-
+    .modal-content {
+      background-color: #222;
+      color: white;
+      padding: 20px 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px #000;
+      width: 90%;
+      max-width: 400px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .modal-content input {
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 5px;
+      border: none;
+      background: #333;
+      color: white;
+    }
+    .modal-buttons {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+    }
+    .modal-buttons button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    #cancelPassChange { background: #666; color: white; }
+    #cancelPassChange:hover { background: #888; }
+    #confirmPassChange { background: #ff5722; color: white; }
+    #confirmPassChange:hover { background: #e64a19; }
   </style>
 
-  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 </head>
@@ -215,292 +200,216 @@
   <header>
     <div id="loggedInUser"></div>
     Secret Chat 🚀
-    <button id="logoutBtn" title="Uitloggen">Uitloggen</button>
+    <button id="logoutBtn">Uitloggen</button>
     <button id="changePassBtn">Wachtwoord wijzigen</button>
   </header>
 
-  <!-- Voeg boven de adminPanel een knop toe om te togglen -->
-<button id="toggleAdminPanelBtn" style="
-  background:red; 
-  color:white; 
-  border:none; 
-  padding:8px 15px; 
-  font-weight:bold; 
-  cursor:pointer; 
-  border-radius:5px;
-  margin:10px 15px;
-  display:none; /* standaard alleen voor admin */
-">Admin Panel openen</button>
+  <button id="toggleAdminPanelBtn">Admin Panel openen</button>
 
-<!-- Admin Panel (begint hidden) -->
-<!-- Linksboven grote username -->
-<div id="loggedInUser" style="position:fixed; top:10px; left:10px; font-size:24px; font-weight:bold; color:#ff5722;"></div>
-
-<!-- Toggle admin panel knop -->
-<button id="toggleAdminPanelBtn" style="display:none; background:#ff5722; color:white; border:none; padding:8px 15px; font-weight:bold; cursor:pointer; border-radius:5px; margin:10px 15px;">Admin Panel openen</button>
-  <!-- Wachtwoord Wijzig Modal -->
-<div id="passwordModal" class="modal">
-  <div class="modal-content">
-    <h2>🔐 Wachtwoord wijzigen</h2>
-    <input type="password" id="currentPass" placeholder="Huidig wachtwoord">
-    <input type="password" id="newPass" placeholder="Nieuw wachtwoord">
-    <input type="password" id="confirmNewPass" placeholder="Bevestig nieuw wachtwoord">
-    <div class="modal-buttons">
-      <button id="cancelPassChange">Annuleren</button>
-      <button id="confirmPassChange">Bevestigen</button>
-    </div>
-    <div id="passChangeMsg" style="margin-top:8px; font-weight:bold;"></div>
+  <div id="adminPanel">
+    <h3>Nieuwe account aanmaken</h3>
+    <input type="text" id="newUser" placeholder="Nieuwe gebruikersnaam" />
+    <input type="password" id="newPass" placeholder="Wachtwoord" />
+    <input type="password" id="newPassConfirm" placeholder="Herhaal wachtwoord" />
+    <button id="createUserBtn">Account aanmaken</button>
+    <div id="adminMsg"></div>
   </div>
-</div>
-
-
-<!-- Admin panel (hidden standaard) -->
-<div id="adminPanel" style="display:none; flex-direction: column; gap:10px; background:#333; padding:15px; border-bottom: 3px solid #ff5722; color:white;">
-  <h3>Nieuwe account aanmaken</h3>
-  <input type="text" id="newUser" placeholder="Nieuwe gebruikersnaam" autocomplete="off" />
-  <input type="password" id="newPass" placeholder="Wachtwoord" autocomplete="off" />
-  <input type="password" id="newPassConfirm" placeholder="Herhaal wachtwoord" autocomplete="off" />
-  <button id="createUserBtn">Account aanmaken</button>
-  <div id="adminMsg" style="margin-top:5px; font-weight:bold;"></div>
-</div>
-
-
 
   <div id="chatMessages"></div>
 
   <footer>
-    <input type="text" id="messageInput" placeholder="Typ hier je bericht..." autocomplete="off" />
+    <input type="text" id="messageInput" placeholder="Typ hier je bericht..." />
     <button id="sendBtn">Send</button>
   </footer>
 
-<script>
-  // Firebase config - zelfde als index.html
-  const firebaseConfig = {
-    apiKey: "AIzaSyB6rYiVZo2R4oY0VE9cDDKRNLkm_qLGAHw",
-    authDomain: "secret-chat-7fec5.firebaseapp.com",
-    databaseURL: "https://secret-chat-7fec5-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "secret-chat-7fec5",
-    storageBucket: "secret-chat-7fec5.appspot.com",
-    messagingSenderId: "822761810797",
-    appId: "1:822761810797:web:92415aadd51d141ee04864",
-    measurementId: "G-Q1ZWRXDHQ3"
-  };
+  <div id="passwordModal" class="modal">
+    <div class="modal-content">
+      <h2>🔐 Wachtwoord wijzigen</h2>
+      <input type="password" id="currentPass" placeholder="Huidig wachtwoord">
+      <input type="password" id="newPassInput" placeholder="Nieuw wachtwoord">
+      <input type="password" id="confirmNewPass" placeholder="Bevestig nieuw wachtwoord">
+      <div class="modal-buttons">
+        <button id="cancelPassChange">Annuleren</button>
+        <button id="confirmPassChange">Bevestigen</button>
+      </div>
+      <div id="passChangeMsg"></div>
+    </div>
+  </div>
 
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyB6rYiVZo2R4oY0VE9cDDKRNLkm_qLGAHw",
+      authDomain: "secret-chat-7fec5.firebaseapp.com",
+      databaseURL: "https://secret-chat-7fec5-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "secret-chat-7fec5",
+      storageBucket: "secret-chat-7fec5.appspot.com",
+      messagingSenderId: "822761810797",
+      appId: "1:822761810797:web:92415aadd51d141ee04864",
+    };
 
-  const chatMessagesEl = document.getElementById('chatMessages');
-  const messageInput = document.getElementById('messageInput');
-  const sendBtn = document.getElementById('sendBtn');
-  const loggedInUserEl = document.getElementById('loggedInUser');
-  const adminPanel = document.getElementById('adminPanel');
-  const newUserInput = document.getElementById('newUser');
-  const newPassInput = document.getElementById('newPass');
-  const newPassConfirmInput = document.getElementById('newPassConfirm');
-  const createUserBtn = document.getElementById('createUserBtn');
-  const adminMsg = document.getElementById('adminMsg');
-  const logoutBtn = document.getElementById('logoutBtn');
-  const toggleAdminPanelBtn = document.getElementById('toggleAdminPanelBtn');
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-  function getUrlParam(param) {
-    const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get(param);
-  }
+    const getUrlParam = param => new URLSearchParams(location.search).get(param);
+    const username = getUrlParam('username');
+    const role = getUrlParam('role');
 
-  const username = getUrlParam('username');
-  const role = getUrlParam('role');
+    if (!username || !role) location.href = 'index.html';
 
-  if (!username || !role) {
-    alert('Geen geldige login gevonden! Je wordt teruggestuurd naar de login pagina.');
-    window.location.href = 'index.html';
-  }
+    const chatMessagesEl = document.getElementById('chatMessages');
+    const messageInput = document.getElementById('messageInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const loggedInUserEl = document.getElementById('loggedInUser');
+    const adminPanel = document.getElementById('adminPanel');
+    const toggleAdminPanelBtn = document.getElementById('toggleAdminPanelBtn');
+    const createUserBtn = document.getElementById('createUserBtn');
+    const newUserInput = document.getElementById('newUser');
+    const newPassInput = document.getElementById('newPass');
+    const newPassConfirmInput = document.getElementById('newPassConfirm');
+    const adminMsg = document.getElementById('adminMsg');
 
-  db.ref('users/' + username).once('value').then(userSnap => {
-    if (!userSnap.exists()) {
-      alert('Gebruiker bestaat niet, terug naar login.');
-      window.location.href = 'index.html';
-    } else {
-      loggedInUserEl.textContent = username.toUpperCase();
-    }
-  });
+    const passwordModal = document.getElementById('passwordModal');
+    const currentPass = document.getElementById('currentPass');
+    const newPass = document.getElementById('newPassInput');
+    const confirmNewPass = document.getElementById('confirmNewPass');
+    const confirmPassChange = document.getElementById('confirmPassChange');
+    const cancelPassChange = document.getElementById('cancelPassChange');
+    const passChangeMsg = document.getElementById('passChangeMsg');
+    const changePassBtn = document.getElementById('changePassBtn');
 
-  db.ref('usersRoles/' + username + '/role').once('value').then(roleSnap => {
-    if (!roleSnap.exists() || roleSnap.val() !== role) {
-      alert('Je rol klopt niet, terug naar login.');
-      window.location.href = 'index.html';
-    } else if (role === 'admin') {
-      toggleAdminPanelBtn.style.display = 'inline-block';
-      adminPanel.style.display = 'none';
-
-      toggleAdminPanelBtn.addEventListener('click', () => {
-        if (adminPanel.style.display === 'none') {
-          adminPanel.style.display = 'flex';
-          toggleAdminPanelBtn.textContent = 'Admin Panel sluiten';
-        } else {
-          adminPanel.style.display = 'none';
-          toggleAdminPanelBtn.textContent = 'Admin Panel openen';
-        }
-      });
-    }
-  });
-
-  logoutBtn.addEventListener('click', () => {
-    window.location.href = 'index.html';
-  });
-
-  function renderMessage(msgId, msgData) {
-    const div = document.createElement('div');
-    div.classList.add('msg');
-
-    let color = '#000';
-    if (msgData.author === 'Michel') color = 'green';
-    else if (msgData.author === 'Milad') color = 'blue';
-    else if (msgData.author === 'Ferre') color = 'purple';
-
-    div.style.color = color;
-
-    if (msgData.authorRole === 'admin') {
-      div.classList.add('admin');
-    }
-    div.id = `msg-${msgId}`;
-
-    const authorEl = document.createElement('div');
-    authorEl.classList.add('author');
-    authorEl.textContent = `${msgData.author} (${msgData.authorRole})`;
-    div.appendChild(authorEl);
-
-    // Highlight mentions (@naam)
-    const textEl = document.createElement('div');
-    const rawText = msgData.text;
-    const highlighted = rawText.replace(/@(\w+)/g, '<span style="color:#ffcc00;font-weight:bold;">@$1</span>');
-    textEl.innerHTML = highlighted;
-    div.appendChild(textEl);
-
-    // Timestamps
-    const timeEl = document.createElement('div');
-    const date = new Date(msgData.timestamp);
-    timeEl.textContent = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    timeEl.style.fontSize = '12px';
-    timeEl.style.color = '#999';
-    timeEl.style.marginTop = '5px';
-    div.appendChild(timeEl);
+    loggedInUserEl.textContent = username.toUpperCase();
 
     if (role === 'admin') {
-      const delBtn = document.createElement('button');
-      delBtn.classList.add('deleteBtn');
-      delBtn.textContent = '×';
-      delBtn.title = 'Bericht verwijderen';
-      delBtn.onclick = () => {
-        if (confirm('Weet je zeker dat je dit bericht wil verwijderen?')) {
-          db.ref('chatMessages/' + msgId).remove();
-        }
+      toggleAdminPanelBtn.style.display = 'inline-block';
+
+      toggleAdminPanelBtn.onclick = () => {
+        const open = adminPanel.style.display === 'flex';
+        adminPanel.style.display = open ? 'none' : 'flex';
+        toggleAdminPanelBtn.textContent = open ? 'Admin Panel openen' : 'Admin Panel sluiten';
       };
-      div.appendChild(delBtn);
-    }
 
-    return div;
-  }
+      createUserBtn.onclick = () => {
+        const newUser = newUserInput.value.trim();
+        const pass = newPassInput.value.trim();
+        const confirm = newPassConfirmInput.value.trim();
 
-  const chatRef = db.ref('chatMessages');
+        if (!newUser || !pass || !confirm) {
+          adminMsg.textContent = 'Vul alles in!';
+          adminMsg.style.color = 'red';
+          return;
+        }
+        if (pass !== confirm) {
+          adminMsg.textContent = 'Wachtwoorden komen niet overeen!';
+          adminMsg.style.color = 'red';
+          return;
+        }
 
-  chatRef.on('child_added', snapshot => {
-    const msgId = snapshot.key;
-    const msgData = snapshot.val();
-    const msgEl = renderMessage(msgId, msgData);
-    chatMessagesEl.appendChild(msgEl);
-    chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
-  });
-  const changePassBtn = document.getElementById('changePassBtn');
-
-// Elements
-const passwordModal = document.getElementById('passwordModal');
-const changePassBtn = document.getElementById('changePassBtn');
-const cancelPassChange = document.getElementById('cancelPassChange');
-const confirmPassChange = document.getElementById('confirmPassChange');
-const passChangeMsg = document.getElementById('passChangeMsg');
-
-// Open modal
-changePassBtn.addEventListener('click', () => {
-  passwordModal.style.display = 'flex';
-  passChangeMsg.textContent = '';
-  document.getElementById('currentPass').value = '';
-  document.getElementById('newPass').value = '';
-  document.getElementById('confirmNewPass').value = '';
-});
-
-// Sluit modal
-cancelPassChange.addEventListener('click', () => {
-  passwordModal.style.display = 'none';
-});
-
-// Bevestig wachtwoordverandering
-confirmPassChange.addEventListener('click', () => {
-  const current = document.getElementById('currentPass').value.trim();
-  const nieuw = document.getElementById('newPass').value.trim();
-  const bevestig = document.getElementById('confirmNewPass').value.trim();
-
-  if (!current || !nieuw || !bevestig) {
-    passChangeMsg.textContent = 'Vul alle velden in!';
-    passChangeMsg.style.color = 'red';
-    return;
-  }
-
-  if (nieuw !== bevestig) {
-    passChangeMsg.textContent = 'Nieuwe wachtwoorden komen niet overeen!';
-    passChangeMsg.style.color = 'red';
-    return;
-  }
-
-  // Firebase check + update
-  db.ref('users/' + username).once('value').then(snap => {
-    const data = snap.val();
-    if (!data || data.password !== current) {
-      passChangeMsg.textContent = 'Huidig wachtwoord is onjuist!';
-      passChangeMsg.style.color = 'red';
-    } else {
-      db.ref('users/' + username).update({ password: nieuw }).then(() => {
-        passChangeMsg.style.color = 'lightgreen';
-        passChangeMsg.textContent = '✅ Wachtwoord gewijzigd, je wordt uitgelogd...';
-        setTimeout(() => {
-          window.location.href = 'index.html';
-        }, 1500);
-      });
-    }
-  });
-});
-
-    db.ref('users/' + newUser).once('value').then(snap => {
-      if (snap.exists()) {
-        adminMsg.textContent = 'Deze gebruikersnaam bestaat al!';
-        adminMsg.style.color = '#000';
-      } else {
-        db.ref('users/' + newUser).set({ password: newPass })
-          .then(() => {
-            db.ref('usersRoles/' + newUser).set({ role: 'user' })
-              .then(() => {
-                adminMsg.textContent = `Account "${newUser}" succesvol aangemaakt! ✅`;
-                adminMsg.style.color = 'lightgreen';
-                newUserInput.value = '';
-                newPassInput.value = '';
-                newPassConfirmInput.value = '';
-              })
-              .catch(err => {
-                adminMsg.textContent = 'Fout bij rollen toewijzen.';
-                adminMsg.style.color = 'red';
-                console.error(err);
-              });
-          })
-          .catch(err => {
-            adminMsg.textContent = 'Fout bij aanmaken account.';
+        db.ref('users/' + newUser).once('value').then(snap => {
+          if (snap.exists()) {
+            adminMsg.textContent = 'Gebruiker bestaat al!';
             adminMsg.style.color = 'red';
-            console.error(err);
-          });
+          } else {
+            db.ref('users/' + newUser).set({ password: pass }).then(() => {
+              db.ref('usersRoles/' + newUser).set({ role: 'user' });
+              adminMsg.textContent = '✅ Account aangemaakt!';
+              adminMsg.style.color = 'lightgreen';
+              newUserInput.value = newPassInput.value = newPassConfirmInput.value = '';
+            });
+          }
+        });
+      };
+    }
+
+    logoutBtn.onclick = () => location.href = 'index.html';
+
+    sendBtn.onclick = () => {
+      const text = messageInput.value.trim();
+      if (!text) return;
+      const msg = {
+        author: username,
+        authorRole: role,
+        text,
+        timestamp: Date.now()
+      };
+      db.ref('chatMessages').push(msg);
+      messageInput.value = '';
+    };
+
+    db.ref('chatMessages').on('child_added', snap => {
+      const { author, authorRole, text, timestamp } = snap.val();
+      const div = document.createElement('div');
+      div.classList.add('msg');
+      div.id = `msg-${snap.key}`;
+
+      const authorEl = document.createElement('div');
+      authorEl.classList.add('author');
+      authorEl.textContent = `${author} (${authorRole})`;
+      div.appendChild(authorEl);
+
+      const msgText = document.createElement('div');
+      msgText.innerHTML = text.replace(/@(\w+)/g, '<span style="color:#ffcc00;">@$1</span>');
+      div.appendChild(msgText);
+
+      const time = document.createElement('div');
+      time.textContent = new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      time.style.fontSize = '12px';
+      time.style.color = '#999';
+      time.style.marginTop = '5px';
+      div.appendChild(time);
+
+      if (role === 'admin') {
+        const del = document.createElement('button');
+        del.classList.add('deleteBtn');
+        del.textContent = '×';
+        del.onclick = () => {
+          if (confirm('Verwijderen?')) db.ref('chatMessages/' + snap.key).remove();
+        };
+        div.appendChild(del);
       }
+
+      chatMessagesEl.appendChild(div);
+      chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
     });
-  });
-</script>
 
+    changePassBtn.onclick = () => {
+      passwordModal.style.display = 'flex';
+      passChangeMsg.textContent = '';
+      currentPass.value = newPass.value = confirmNewPass.value = '';
+    };
 
+    cancelPassChange.onclick = () => passwordModal.style.display = 'none';
 
+    confirmPassChange.onclick = () => {
+      const old = currentPass.value.trim();
+      const nieuw = newPass.value.trim();
+      const bevestig = confirmNewPass.value.trim();
+
+      if (!old || !nieuw || !bevestig) {
+        passChangeMsg.textContent = 'Alles invullen aub';
+        passChangeMsg.style.color = 'red';
+        return;
+      }
+
+      if (nieuw !== bevestig) {
+        passChangeMsg.textContent = 'Wachtwoorden komen niet overeen!';
+        passChangeMsg.style.color = 'red';
+        return;
+      }
+
+      db.ref('users/' + username).once('value').then(snap => {
+        if (!snap.exists() || snap.val().password !== old) {
+          passChangeMsg.textContent = 'Huidig wachtwoord fout!';
+          passChangeMsg.style.color = 'red';
+        } else {
+          db.ref('users/' + username).update({ password: nieuw }).then(() => {
+            passChangeMsg.style.color = 'lightgreen';
+            passChangeMsg.textContent = '✅ Wachtwoord aangepast. Uitloggen...';
+            setTimeout(() => location.href = 'index.html', 1500);
+          });
+        }
+      });
+    };
+  </script>
 </body>
 </html>
