@@ -152,6 +152,7 @@
     <div id="loggedInUser"></div>
     Secret Chat 🚀
     <button id="logoutBtn" title="Uitloggen">Uitloggen</button>
+    <button id="changePassBtn">Wachtwoord wijzigen</button>
   </header>
 
   <!-- Voeg boven de adminPanel een knop toe om te togglen -->
@@ -206,11 +207,9 @@
     measurementId: "G-Q1ZWRXDHQ3"
   };
 
-  // Init Firebase
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
 
-  // DOM
   const chatMessagesEl = document.getElementById('chatMessages');
   const messageInput = document.getElementById('messageInput');
   const sendBtn = document.getElementById('sendBtn');
@@ -218,35 +217,30 @@
   const adminPanel = document.getElementById('adminPanel');
   const newUserInput = document.getElementById('newUser');
   const newPassInput = document.getElementById('newPass');
-  const newPassConfirmInput = document.getElementById('newPassConfirm'); // nieuw input
+  const newPassConfirmInput = document.getElementById('newPassConfirm');
   const createUserBtn = document.getElementById('createUserBtn');
   const adminMsg = document.getElementById('adminMsg');
   const logoutBtn = document.getElementById('logoutBtn');
-  const toggleAdminPanelBtn = document.getElementById('toggleAdminPanelBtn'); // toggle knop
+  const toggleAdminPanelBtn = document.getElementById('toggleAdminPanelBtn');
 
-  // Helper om URL params te pakken
   function getUrlParam(param) {
     const urlParams = new URLSearchParams(window.location.search);
     return urlParams.get(param);
   }
 
-  // Haal username + role uit URL
   const username = getUrlParam('username');
   const role = getUrlParam('role');
 
-  // Check login data
   if (!username || !role) {
     alert('Geen geldige login gevonden! Je wordt teruggestuurd naar de login pagina.');
     window.location.href = 'index.html';
   }
 
-  // Check of user bestaat en rol klopt
   db.ref('users/' + username).once('value').then(userSnap => {
     if (!userSnap.exists()) {
       alert('Gebruiker bestaat niet, terug naar login.');
       window.location.href = 'index.html';
     } else {
-      // Toon username linksboven (groot)
       loggedInUserEl.textContent = username.toUpperCase();
     }
   });
@@ -255,10 +249,8 @@
     if (!roleSnap.exists() || roleSnap.val() !== role) {
       alert('Je rol klopt niet, terug naar login.');
       window.location.href = 'index.html';
-    } else if(role === 'admin') {
-      // Toon toggle knop voor admin panel
+    } else if (role === 'admin') {
       toggleAdminPanelBtn.style.display = 'inline-block';
-      // Admin panel standaard dicht
       adminPanel.style.display = 'none';
 
       toggleAdminPanelBtn.addEventListener('click', () => {
@@ -273,77 +265,63 @@
     }
   });
 
-  // Logout functie
   logoutBtn.addEventListener('click', () => {
-    // Gewoon terug naar loginpagina sturen
     window.location.href = 'index.html';
   });
 
-  // Render bericht
-function renderMessage(msgId, msgData) {
-  const div = document.createElement('div');
-  div.classList.add('msg');
+  function renderMessage(msgId, msgData) {
+    const div = document.createElement('div');
+    div.classList.add('msg');
 
-  // Kleuren per gebruiker (tekst en background)
-  let textColor = '#000';   // fallback zwart
-  let bgColor = '#eee';     // fallback lichtgrijs
+    let color = '#000';
+    if (msgData.author === 'Michel') color = 'green';
+    else if (msgData.author === 'Milad') color = 'blue';
+    else if (msgData.author === 'Ferre') color = 'purple';
 
-  if (msgData.author === 'Michel') {
-    textColor = 'white';
-    bgColor = 'green';
-  } else if (msgData.author === 'Milad') {
-    textColor = 'white';
-    bgColor = 'blue';
-  } else if (msgData.author === 'Ferre') {
-    textColor = 'white';
-    bgColor = 'purple';
+    div.style.color = color;
+
+    if (msgData.authorRole === 'admin') {
+      div.classList.add('admin');
+    }
+    div.id = `msg-${msgId}`;
+
+    const authorEl = document.createElement('div');
+    authorEl.classList.add('author');
+    authorEl.textContent = `${msgData.author} (${msgData.authorRole})`;
+    div.appendChild(authorEl);
+
+    // Highlight mentions (@naam)
+    const textEl = document.createElement('div');
+    const rawText = msgData.text;
+    const highlighted = rawText.replace(/@(\w+)/g, '<span style="color:#ffcc00;font-weight:bold;">@$1</span>');
+    textEl.innerHTML = highlighted;
+    div.appendChild(textEl);
+
+    // Timestamps
+    const timeEl = document.createElement('div');
+    const date = new Date(msgData.timestamp);
+    timeEl.textContent = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    timeEl.style.fontSize = '12px';
+    timeEl.style.color = '#999';
+    timeEl.style.marginTop = '5px';
+    div.appendChild(timeEl);
+
+    if (role === 'admin') {
+      const delBtn = document.createElement('button');
+      delBtn.classList.add('deleteBtn');
+      delBtn.textContent = '×';
+      delBtn.title = 'Bericht verwijderen';
+      delBtn.onclick = () => {
+        if (confirm('Weet je zeker dat je dit bericht wil verwijderen?')) {
+          db.ref('chatMessages/' + msgId).remove();
+        }
+      };
+      div.appendChild(delBtn);
+    }
+
+    return div;
   }
 
-  div.style.color = textColor;
-  div.style.backgroundColor = bgColor;
-
-  if (msgData.authorRole === 'admin') {
-    div.classList.add('admin');
-  }
-  div.id = `msg-${msgId}`;
-
-  const authorEl = document.createElement('div');
-  authorEl.classList.add('author');
-  authorEl.textContent = `${msgData.author} (${msgData.authorRole})`;
-  div.appendChild(authorEl);
-
-  const textEl = document.createElement('div');
-textEl.textContent = msgData.text;
-div.appendChild(textEl);
-
-// Timestamp toevoegen
-const timeEl = document.createElement('div');
-const date = new Date(msgData.timestamp);
-timeEl.textContent = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-timeEl.style.fontSize = '12px';
-timeEl.style.color = '#999';
-timeEl.style.marginTop = '5px';
-div.appendChild(timeEl);
-
-
-  if (role === 'admin') {
-    const delBtn = document.createElement('button');
-    delBtn.classList.add('deleteBtn');
-    delBtn.textContent = '×';
-    delBtn.title = 'Bericht verwijderen';
-    delBtn.onclick = () => {
-      if (confirm('Weet je zeker dat je dit bericht wil verwijderen?')) {
-        db.ref('chatMessages/' + msgId).remove();
-      }
-    };
-    div.appendChild(delBtn);
-  }
-
-  return div;
-}
-
-
-  // Update chat op realtime veranderingen
   const chatRef = db.ref('chatMessages');
 
   chatRef.on('child_added', snapshot => {
@@ -353,6 +331,41 @@ div.appendChild(timeEl);
     chatMessagesEl.appendChild(msgEl);
     chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
   });
+  const changePassBtn = document.getElementById('changePassBtn');
+
+changePassBtn.addEventListener('click', () => {
+  const current = prompt('Huidig wachtwoord?');
+  if (!current) return;
+
+  const nieuw = prompt('Nieuw wachtwoord?');
+  if (!nieuw) return;
+
+  const bevestig = prompt('Bevestig nieuw wachtwoord:');
+  if (!bevestig) return;
+
+  if (nieuw !== bevestig) {
+    alert('❌ Nieuw wachtwoord komt niet overeen met bevestiging.');
+    return;
+  }
+
+  // Check of huidig wachtwoord klopt
+  db.ref('users/' + username).once('value').then(snap => {
+    const saved = snap.val();
+    if (!saved || saved.password !== current) {
+      alert('❌ Huidig wachtwoord klopt niet!');
+    } else {
+      // Wachtwoord updaten
+      db.ref('users/' + username).update({ password: nieuw }).then(() => {
+        alert('✅ Wachtwoord succesvol gewijzigd! Je wordt uitgelogd.');
+        window.location.href = 'index.html';
+      }).catch(err => {
+        alert('Fout bij opslaan nieuw wachtwoord.');
+        console.error(err);
+      });
+    }
+  });
+});
+
 
   chatRef.on('child_removed', snapshot => {
     const msgId = snapshot.key;
@@ -362,12 +375,10 @@ div.appendChild(timeEl);
     }
   });
 
-  // Verstuur bericht functie
   sendBtn.addEventListener('click', () => {
     const text = messageInput.value.trim();
     if (!text) return;
 
-    // push nieuw bericht met author + role + text + timestamp
     const newMsg = {
       author: username,
       authorRole: role,
@@ -386,12 +397,10 @@ div.appendChild(timeEl);
       });
   });
 
-  // Enter toets om te versturen
   messageInput.addEventListener('keydown', e => {
     if (e.key === 'Enter') sendBtn.click();
   });
 
-  // Admin account aanmaken functie (nu met dubbele wachtwoordcheck)
   createUserBtn.addEventListener('click', () => {
     const newUser = newUserInput.value.trim();
     const newPass = newPassInput.value.trim();
@@ -408,16 +417,13 @@ div.appendChild(timeEl);
       return;
     }
 
-    // Check eerst of username al bestaat
     db.ref('users/' + newUser).once('value').then(snap => {
       if (snap.exists()) {
         adminMsg.textContent = 'Deze gebruikersnaam bestaat al!';
         adminMsg.style.color = '#000';
       } else {
-        // Zet user & pass
         db.ref('users/' + newUser).set({ password: newPass })
           .then(() => {
-            // Zet role user
             db.ref('usersRoles/' + newUser).set({ role: 'user' })
               .then(() => {
                 adminMsg.textContent = `Account "${newUser}" succesvol aangemaakt! ✅`;
@@ -441,6 +447,7 @@ div.appendChild(timeEl);
     });
   });
 </script>
+
 
 
 </body>
