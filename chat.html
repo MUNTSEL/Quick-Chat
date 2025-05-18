@@ -140,6 +140,70 @@
     #logoutBtn:hover {
       background: #ff4444;
     }
+    /* Modal style */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0; top: 0;
+  width: 100%; height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background-color: #222;
+  color: white;
+  padding: 20px 30px;
+  border-radius: 10px;
+  box-shadow: 0 0 15px #000;
+  width: 90%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.modal-content input {
+  padding: 10px;
+  font-size: 16px;
+  border-radius: 5px;
+  border: none;
+  background: #333;
+  color: white;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.modal-buttons button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+#cancelPassChange {
+  background: #666;
+  color: white;
+}
+#cancelPassChange:hover {
+  background: #888;
+}
+
+#confirmPassChange {
+  background: #ff5722;
+  color: white;
+}
+#confirmPassChange:hover {
+  background: #e64a19;
+}
+
   </style>
 
   <!-- Firebase -->
@@ -174,6 +238,21 @@
 
 <!-- Toggle admin panel knop -->
 <button id="toggleAdminPanelBtn" style="display:none; background:#ff5722; color:white; border:none; padding:8px 15px; font-weight:bold; cursor:pointer; border-radius:5px; margin:10px 15px;">Admin Panel openen</button>
+  <!-- Wachtwoord Wijzig Modal -->
+<div id="passwordModal" class="modal">
+  <div class="modal-content">
+    <h2>🔐 Wachtwoord wijzigen</h2>
+    <input type="password" id="currentPass" placeholder="Huidig wachtwoord">
+    <input type="password" id="newPass" placeholder="Nieuw wachtwoord">
+    <input type="password" id="confirmNewPass" placeholder="Bevestig nieuw wachtwoord">
+    <div class="modal-buttons">
+      <button id="cancelPassChange">Annuleren</button>
+      <button id="confirmPassChange">Bevestigen</button>
+    </div>
+    <div id="passChangeMsg" style="margin-top:8px; font-weight:bold;"></div>
+  </div>
+</div>
+
 
 <!-- Admin panel (hidden standaard) -->
 <div id="adminPanel" style="display:none; flex-direction: column; gap:10px; background:#333; padding:15px; border-bottom: 3px solid #ff5722; color:white;">
@@ -333,89 +412,62 @@
   });
   const changePassBtn = document.getElementById('changePassBtn');
 
+// Elements
+const passwordModal = document.getElementById('passwordModal');
+const changePassBtn = document.getElementById('changePassBtn');
+const cancelPassChange = document.getElementById('cancelPassChange');
+const confirmPassChange = document.getElementById('confirmPassChange');
+const passChangeMsg = document.getElementById('passChangeMsg');
+
+// Open modal
 changePassBtn.addEventListener('click', () => {
-  const current = prompt('Huidig wachtwoord?');
-  if (!current) return;
+  passwordModal.style.display = 'flex';
+  passChangeMsg.textContent = '';
+  document.getElementById('currentPass').value = '';
+  document.getElementById('newPass').value = '';
+  document.getElementById('confirmNewPass').value = '';
+});
 
-  const nieuw = prompt('Nieuw wachtwoord?');
-  if (!nieuw) return;
+// Sluit modal
+cancelPassChange.addEventListener('click', () => {
+  passwordModal.style.display = 'none';
+});
 
-  const bevestig = prompt('Bevestig nieuw wachtwoord:');
-  if (!bevestig) return;
+// Bevestig wachtwoordverandering
+confirmPassChange.addEventListener('click', () => {
+  const current = document.getElementById('currentPass').value.trim();
+  const nieuw = document.getElementById('newPass').value.trim();
+  const bevestig = document.getElementById('confirmNewPass').value.trim();
 
-  if (nieuw !== bevestig) {
-    alert('❌ Nieuw wachtwoord komt niet overeen met bevestiging.');
+  if (!current || !nieuw || !bevestig) {
+    passChangeMsg.textContent = 'Vul alle velden in!';
+    passChangeMsg.style.color = 'red';
     return;
   }
 
-  // Check of huidig wachtwoord klopt
+  if (nieuw !== bevestig) {
+    passChangeMsg.textContent = 'Nieuwe wachtwoorden komen niet overeen!';
+    passChangeMsg.style.color = 'red';
+    return;
+  }
+
+  // Firebase check + update
   db.ref('users/' + username).once('value').then(snap => {
-    const saved = snap.val();
-    if (!saved || saved.password !== current) {
-      alert('❌ Huidig wachtwoord klopt niet!');
+    const data = snap.val();
+    if (!data || data.password !== current) {
+      passChangeMsg.textContent = 'Huidig wachtwoord is onjuist!';
+      passChangeMsg.style.color = 'red';
     } else {
-      // Wachtwoord updaten
       db.ref('users/' + username).update({ password: nieuw }).then(() => {
-        alert('✅ Wachtwoord succesvol gewijzigd! Je wordt uitgelogd.');
-        window.location.href = 'index.html';
-      }).catch(err => {
-        alert('Fout bij opslaan nieuw wachtwoord.');
-        console.error(err);
+        passChangeMsg.style.color = 'lightgreen';
+        passChangeMsg.textContent = '✅ Wachtwoord gewijzigd, je wordt uitgelogd...';
+        setTimeout(() => {
+          window.location.href = 'index.html';
+        }, 1500);
       });
     }
   });
 });
-
-
-  chatRef.on('child_removed', snapshot => {
-    const msgId = snapshot.key;
-    const msgEl = document.getElementById('msg-' + msgId);
-    if (msgEl) {
-      msgEl.remove();
-    }
-  });
-
-  sendBtn.addEventListener('click', () => {
-    const text = messageInput.value.trim();
-    if (!text) return;
-
-    const newMsg = {
-      author: username,
-      authorRole: role,
-      text,
-      timestamp: Date.now()
-    };
-
-    db.ref('chatMessages').push(newMsg)
-      .then(() => {
-        messageInput.value = '';
-        messageInput.focus();
-      })
-      .catch(err => {
-        alert('Fout bij versturen bericht.');
-        console.error(err);
-      });
-  });
-
-  messageInput.addEventListener('keydown', e => {
-    if (e.key === 'Enter') sendBtn.click();
-  });
-
-  createUserBtn.addEventListener('click', () => {
-    const newUser = newUserInput.value.trim();
-    const newPass = newPassInput.value.trim();
-    const newPassConfirm = newPassConfirmInput.value.trim();
-
-    if (!newUser || !newPass || !newPassConfirm) {
-      adminMsg.textContent = 'Vul alle velden in!';
-      adminMsg.style.color = 'red';
-      return;
-    }
-    if (newPass !== newPassConfirm) {
-      adminMsg.textContent = 'Wachtwoorden komen niet overeen!';
-      adminMsg.style.color = 'red';
-      return;
-    }
 
     db.ref('users/' + newUser).once('value').then(snap => {
       if (snap.exists()) {
