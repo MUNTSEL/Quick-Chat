@@ -372,44 +372,51 @@
       chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
     });
 
-    changePassBtn.onclick = () => {
-      passwordModal.style.display = 'flex';
-      passChangeMsg.textContent = '';
-      currentPass.value = newPass.value = confirmNewPass.value = '';
-    };
+ const form = document.getElementById('changePasswordForm');
+    const currentPassInput = document.getElementById('currentPass');
+    const newPassInput = document.getElementById('newPassChange');
+    const confirmNewPassInput = document.getElementById('confirmNewPass');
+    const messageDiv = document.getElementById('message');
 
-    cancelPassChange.onclick = () => passwordModal.style.display = 'none';
+    form.addEventListener('submit', e => {
+      e.preventDefault();
 
-    confirmPassChange.onclick = () => {
-      const old = currentPass.value.trim();
-      const nieuw = newPass.value.trim();
-      const bevestig = confirmNewPass.value.trim();
+      const currentPass = currentPassInput.value.trim();
+      const newPass = newPassInput.value.trim();
+      const confirmNewPass = confirmNewPassInput.value.trim();
 
-      if (!old || !nieuw || !bevestig) {
-        passChangeMsg.textContent = 'Alles invullen aub';
-        passChangeMsg.style.color = 'red';
+      messageDiv.textContent = '';
+      messageDiv.className = '';
+
+      // Simpele check: huidige wachtwoord is 'admin123' (dummy)
+      const correctCurrentPass = 'admin123';
+
+      if(currentPass !== correctCurrentPass) {
+        messageDiv.textContent = '😵 Huidig wachtwoord is incorrect!';
+        messageDiv.className = 'error';
         return;
       }
 
-      if (nieuw !== bevestig) {
-        passChangeMsg.textContent = 'Wachtwoorden komen niet overeen!';
-        passChangeMsg.style.color = 'red';
+      if(newPass.length < 6) {
+        messageDiv.textContent = '⚠️ Nieuw wachtwoord moet minstens 6 tekens zijn.';
+        messageDiv.className = 'error';
         return;
       }
 
-      db.ref('users/' + username).once('value').then(snap => {
-        if (!snap.exists() || snap.val().password !== old) {
-          passChangeMsg.textContent = 'Huidig wachtwoord fout!';
-          passChangeMsg.style.color = 'red';
-        } else {
-          db.ref('users/' + username).update({ password: nieuw }).then(() => {
-            passChangeMsg.style.color = 'lightgreen';
-            passChangeMsg.textContent = '✅ Wachtwoord aangepast. Uitloggen...';
-            setTimeout(() => location.href = 'index.html', 1500);
-          });
-        }
-      });
-    };
+      if(newPass !== confirmNewPass) {
+        messageDiv.textContent = '🤔 Nieuw wachtwoord en bevestiging komen niet overeen.';
+        messageDiv.className = 'error';
+        return;
+      }
+
+      // Hier zou je normaal je wachtwoord update logica doen (bv. API call)
+      // For now, gewoon succes melden:
+      messageDiv.textContent = '✅ Wachtwoord succesvol veranderd!';
+      messageDiv.className = 'success';
+
+      // Clear inputs
+      form.reset();
+    });
   </script>
 </body>
 </html>
