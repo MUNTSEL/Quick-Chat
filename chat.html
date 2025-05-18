@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Secret Chat - Live Chat</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #121212;
+      color: #eee;
+      margin: 0; padding: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    header {
+      background: #3682f5;
+      padding: 15px 15px 15px 150px;
+      font-size: 24px;
+      font-weight: bold;
+      text-align: center;
+      color: white;
+      position: relative;
+    }
+    #loggedInUser {
+      position: absolute;
+      left: 15px;
+      top: 15px;
+      font-size: 20px;
+      font-weight: 900;
+      color: #fff;
+      user-select: none;
+    }
+    #adminPanel {
+      background: #333;
+      padding: 10px 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      border-bottom: 3px solid #ff5722;
+      color: white;
+    }
+    #adminPanel h3 {
+      margin: 0 0 5px 0;
+      font-weight: bold;
+    }
+    #adminPanel input, #adminPanel button {
+      padding: 8px;
+      font-size: 16px;
+      border-radius: 5px;
+      border: none;
+    }
+    #adminPanel input {
+      background: #222;
+      color: white;
+    }
+    #adminPanel button {
+      background: #ff5722;
+      color: white;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    #adminPanel button:hover {
+      background: #e64a19;
+    }
+    #chatMessages {
+      flex-grow: 1;
+      overflow-y: auto;
+      padding: 15px;
+      background: #222;
+    }
+    .msg {
+      padding: 8px 12px;
+      margin-bottom: 10px;
+      border-radius: 10px;
+      background: #ffffff;
+      position: relative;
+      max-width: 70%;
+      word-wrap: break-word;
+    }
+    .msg.admin {
+      background: #ffffff;
+    }
+    .msg .author {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    .msg .deleteBtn {
+      position: absolute;
+      top: 5px;
+      right: 8px;
+      background: transparent;
+      border: none;
+      color: #ff4444;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    footer {
+      display: flex;
+      padding: 10px;
+      background: #181818;
+    }
+    #messageInput {
+      flex-grow: 1;
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 5px;
+      border: none;
+      margin-right: 8px;
+      background: #333;
+      color: #eee;
+    }
+    #sendBtn {
+      background: #ff5722;
+      border: none;
+      color: white;
+      padding: 10px 20px;
+      font-weight: bold;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    #sendBtn:hover {
+      background: #e64a19;
+    }
+    #logoutBtn {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      background: #444;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 5px;
+      color: white;
+      cursor: pointer;
+      font-weight: bold;
+      user-select: none;
+    }
+    #logoutBtn:hover {
+      background: #ff4444;
+    }
+  </style>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+</head>
+<body>
+
+  <header>
+    <div id="loggedInUser"></div>
+    Secret Chat 🚀
+    <button id="logoutBtn" title="Uitloggen">Uitloggen</button>
+  </header>
+
+  <!-- Voeg boven de adminPanel een knop toe om te togglen -->
+<button id="toggleAdminPanelBtn" style="
+  background:red; 
+  color:white; 
+  border:none; 
+  padding:8px 15px; 
+  font-weight:bold; 
+  cursor:pointer; 
+  border-radius:5px;
+  margin:10px 15px;
+  display:none; /* standaard alleen voor admin */
+">Admin Panel openen</button>
+
+<!-- Admin Panel (begint hidden) -->
+<!-- Linksboven grote username -->
+<div id="loggedInUser" style="position:fixed; top:10px; left:10px; font-size:24px; font-weight:bold; color:#ff5722;"></div>
+
+<!-- Toggle admin panel knop -->
+<button id="toggleAdminPanelBtn" style="display:none; background:#ff5722; color:white; border:none; padding:8px 15px; font-weight:bold; cursor:pointer; border-radius:5px; margin:10px 15px;">Admin Panel openen</button>
+
+<!-- Admin panel (hidden standaard) -->
+<div id="adminPanel" style="display:none; flex-direction: column; gap:10px; background:#333; padding:15px; border-bottom: 3px solid #ff5722; color:white;">
+  <h3>Nieuwe account aanmaken</h3>
+  <input type="text" id="newUser" placeholder="Nieuwe gebruikersnaam" autocomplete="off" />
+  <input type="password" id="newPass" placeholder="Wachtwoord" autocomplete="off" />
+  <input type="password" id="newPassConfirm" placeholder="Herhaal wachtwoord" autocomplete="off" />
+  <button id="createUserBtn">Account aanmaken</button>
+  <div id="adminMsg" style="margin-top:5px; font-weight:bold;"></div>
+</div>
+
+
+
+  <div id="chatMessages"></div>
+
+  <footer>
+    <input type="text" id="messageInput" placeholder="Typ hier je bericht..." autocomplete="off" />
+    <button id="sendBtn">Send</button>
+  </footer>
+
+<script>
+  // Firebase config - zelfde als index.html
+  const firebaseConfig = {
+    apiKey: "AIzaSyB6rYiVZo2R4oY0VE9cDDKRNLkm_qLGAHw",
+    authDomain: "secret-chat-7fec5.firebaseapp.com",
+    databaseURL: "https://secret-chat-7fec5-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "secret-chat-7fec5",
+    storageBucket: "secret-chat-7fec5.appspot.com",
+    messagingSenderId: "822761810797",
+    appId: "1:822761810797:web:92415aadd51d141ee04864",
+    measurementId: "G-Q1ZWRXDHQ3"
+  };
+
+  // Init Firebase
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  // DOM
+  const chatMessagesEl = document.getElementById('chatMessages');
+  const messageInput = document.getElementById('messageInput');
+  const sendBtn = document.getElementById('sendBtn');
+  const loggedInUserEl = document.getElementById('loggedInUser');
+  const adminPanel = document.getElementById('adminPanel');
+  const newUserInput = document.getElementById('newUser');
+  const newPassInput = document.getElementById('newPass');
+  const newPassConfirmInput = document.getElementById('newPassConfirm'); // nieuw input
+  const createUserBtn = document.getElementById('createUserBtn');
+  const adminMsg = document.getElementById('adminMsg');
+  const logoutBtn = document.getElementById('logoutBtn');
+  const toggleAdminPanelBtn = document.getElementById('toggleAdminPanelBtn'); // toggle knop
+
+  // Helper om URL params te pakken
+  function getUrlParam(param) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(param);
+  }
+
+  // Haal username + role uit URL
+  const username = getUrlParam('username');
+  const role = getUrlParam('role');
+
+  // Check login data
+  if (!username || !role) {
+    alert('Geen geldige login gevonden! Je wordt teruggestuurd naar de login pagina.');
+    window.location.href = 'index.html';
+  }
+
+  // Check of user bestaat en rol klopt
+  db.ref('users/' + username).once('value').then(userSnap => {
+    if (!userSnap.exists()) {
+      alert('Gebruiker bestaat niet, terug naar login.');
+      window.location.href = 'index.html';
+    } else {
+      // Toon username linksboven (groot)
+      loggedInUserEl.textContent = username.toUpperCase();
+    }
+  });
+
+  db.ref('usersRoles/' + username + '/role').once('value').then(roleSnap => {
+    if (!roleSnap.exists() || roleSnap.val() !== role) {
+      alert('Je rol klopt niet, terug naar login.');
+      window.location.href = 'index.html';
+    } else if(role === 'admin') {
+      // Toon toggle knop voor admin panel
+      toggleAdminPanelBtn.style.display = 'inline-block';
+      // Admin panel standaard dicht
+      adminPanel.style.display = 'none';
+
+      toggleAdminPanelBtn.addEventListener('click', () => {
+        if (adminPanel.style.display === 'none') {
+          adminPanel.style.display = 'flex';
+          toggleAdminPanelBtn.textContent = 'Admin Panel sluiten';
+        } else {
+          adminPanel.style.display = 'none';
+          toggleAdminPanelBtn.textContent = 'Admin Panel openen';
+        }
+      });
+    }
+  });
+
+  // Logout functie
+  logoutBtn.addEventListener('click', () => {
+    // Gewoon terug naar loginpagina sturen
+    window.location.href = 'index.html';
+  });
+
+  // Render bericht
+function renderMessage(msgId, msgData) {
+  const div = document.createElement('div');
+  div.classList.add('msg');
+
+  // Kleuren per gebruiker (tekst en background)
+  let textColor = '#000';   // fallback zwart
+  let bgColor = '#eee';     // fallback lichtgrijs
+
+  if (msgData.author === 'Michel') {
+    textColor = 'white';
+    bgColor = 'green';
+  } else if (msgData.author === 'Milad') {
+    textColor = 'white';
+    bgColor = 'blue';
+  } else if (msgData.author === 'Ferre') {
+    textColor = 'white';
+    bgColor = 'purple';
+  }
+
+  div.style.color = textColor;
+  div.style.backgroundColor = bgColor;
+
+  if (msgData.authorRole === 'admin') {
+    div.classList.add('admin');
+  }
+  div.id = `msg-${msgId}`;
+
+  const authorEl = document.createElement('div');
+  authorEl.classList.add('author');
+  authorEl.textContent = `${msgData.author} (${msgData.authorRole})`;
+  div.appendChild(authorEl);
+
+  const textEl = document.createElement('div');
+  textEl.textContent = msgData.text;
+  div.appendChild(textEl);
+
+  if (role === 'admin') {
+    const delBtn = document.createElement('button');
+    delBtn.classList.add('deleteBtn');
+    delBtn.textContent = '×';
+    delBtn.title = 'Bericht verwijderen';
+    delBtn.onclick = () => {
+      if (confirm('Weet je zeker dat je dit bericht wil verwijderen?')) {
+        db.ref('chatMessages/' + msgId).remove();
+      }
+    };
+    div.appendChild(delBtn);
+  }
+
+  return div;
+}
+
+
+  // Update chat op realtime veranderingen
+  const chatRef = db.ref('chatMessages');
+
+  chatRef.on('child_added', snapshot => {
+    const msgId = snapshot.key;
+    const msgData = snapshot.val();
+    const msgEl = renderMessage(msgId, msgData);
+    chatMessagesEl.appendChild(msgEl);
+    chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
+  });
+
+  chatRef.on('child_removed', snapshot => {
+    const msgId = snapshot.key;
+    const msgEl = document.getElementById('msg-' + msgId);
+    if (msgEl) {
+      msgEl.remove();
+    }
+  });
+
+  // Verstuur bericht functie
+  sendBtn.addEventListener('click', () => {
+    const text = messageInput.value.trim();
+    if (!text) return;
+
+    // push nieuw bericht met author + role + text + timestamp
+    const newMsg = {
+      author: username,
+      authorRole: role,
+      text,
+      timestamp: Date.now()
+    };
+
+    db.ref('chatMessages').push(newMsg)
+      .then(() => {
+        messageInput.value = '';
+        messageInput.focus();
+      })
+      .catch(err => {
+        alert('Fout bij versturen bericht.');
+        console.error(err);
+      });
+  });
+
+  // Enter toets om te versturen
+  messageInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') sendBtn.click();
+  });
+
+  // Admin account aanmaken functie (nu met dubbele wachtwoordcheck)
+  createUserBtn.addEventListener('click', () => {
+    const newUser = newUserInput.value.trim();
+    const newPass = newPassInput.value.trim();
+    const newPassConfirm = newPassConfirmInput.value.trim();
+
+    if (!newUser || !newPass || !newPassConfirm) {
+      adminMsg.textContent = 'Vul alle velden in!';
+      adminMsg.style.color = 'red';
+      return;
+    }
+    if (newPass !== newPassConfirm) {
+      adminMsg.textContent = 'Wachtwoorden komen niet overeen!';
+      adminMsg.style.color = 'red';
+      return;
+    }
+
+    // Check eerst of username al bestaat
+    db.ref('users/' + newUser).once('value').then(snap => {
+      if (snap.exists()) {
+        adminMsg.textContent = 'Deze gebruikersnaam bestaat al!';
+        adminMsg.style.color = '#000';
+      } else {
+        // Zet user & pass
+        db.ref('users/' + newUser).set({ password: newPass })
+          .then(() => {
+            // Zet role user
+            db.ref('usersRoles/' + newUser).set({ role: 'user' })
+              .then(() => {
+                adminMsg.textContent = `Account "${newUser}" succesvol aangemaakt! ✅`;
+                adminMsg.style.color = 'lightgreen';
+                newUserInput.value = '';
+                newPassInput.value = '';
+                newPassConfirmInput.value = '';
+              })
+              .catch(err => {
+                adminMsg.textContent = 'Fout bij rollen toewijzen.';
+                adminMsg.style.color = 'red';
+                console.error(err);
+              });
+          })
+          .catch(err => {
+            adminMsg.textContent = 'Fout bij aanmaken account.';
+            adminMsg.style.color = 'red';
+            console.error(err);
+          });
+      }
+    });
+  });
+</script>
+
+
+</body>
+</html>
